@@ -16,27 +16,6 @@ export default function TabLayout() {
         },
       }}>
       <Tabs.Screen
-        name="history"
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <Image
-              source={
-                focused
-                  ? require('~/public/tab-icons/clock.png')
-                  : require('~/public/tab-icons/clock-empty.png')
-              }
-              className="h-8 w-8"
-              resizeMode="contain"
-            />
-          ),
-        }}
-        listeners={{
-          tabPress: async () => {
-            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          },
-        }}
-      />
-      <Tabs.Screen
         name="wallet"
         options={{
           tabBarIcon: ({ focused }) => (
@@ -57,6 +36,28 @@ export default function TabLayout() {
           },
         }}
       />
+      <Tabs.Screen
+        name="history"
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <Image
+              source={
+                focused
+                  ? require('~/public/tab-icons/clock.png')
+                  : require('~/public/tab-icons/clock-empty.png')
+              }
+              className="h-8 w-8"
+              resizeMode="contain"
+            />
+          ),
+        }}
+        listeners={{
+          tabPress: async () => {
+            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          },
+        }}
+      />
+
       <Tabs.Screen
         name="finance"
         options={{

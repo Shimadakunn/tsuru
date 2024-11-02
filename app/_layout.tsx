@@ -3,9 +3,10 @@ import * as Font from 'expo-font';
 import { Stack } from 'expo-router';
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { Expandable } from '~/components/ui/rectangle';
+// import { ExpandableProvider } from '~/components/ui/rectangle';
 
 export const unstable_settings = {
   initialRouteName: '(app)',
@@ -32,11 +33,15 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-      }}>
-      <Stack.Screen name="(app)" />
-    </Stack>
+    <SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+          }}>
+          <Stack.Screen name="(app)" options={{ headerShown: false }} />
+        </Stack>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   );
 }

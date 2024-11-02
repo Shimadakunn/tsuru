@@ -1,221 +1,145 @@
-import React, { ReactNode, createContext, useContext, useEffect, useState } from 'react';
-import {
-  View,
-  Pressable,
-  StyleSheet,
-  Animated,
-  ViewStyle,
-  StyleProp,
-  LayoutAnimation,
-  Platform,
-  UIManager,
-} from 'react-native';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { View, Pressable, Dimensions, StyleSheet } from 'react-native';
+import { PanGestureHandler } from 'react-native-gesture-handler';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  useAnimatedGestureHandler,
+  runOnJS,
+  withTiming,
+  interpolate,
+} from 'react-native-reanimated';
 
-// Enable LayoutAnimation for Android
-if (Platform.OS === 'android') {
-  if (UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-  }
-}
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
+const SPRING_CONFIG = {
+  damping: 20,
+  mass: 1,
+  stiffness: 200,
+};
 
 interface ExpandableContextType {
   isExpanded: boolean;
   toggleExpand: () => void;
-  expandDirection: 'vertical' | 'horizontal' | 'both';
-  expandBehavior: 'replace' | 'push';
-  transitionDuration: number;
-  initialDelay: number;
-  onExpandEnd?: () => void;
-  onCollapseEnd?: () => void;
 }
 
 const ExpandableContext = createContext<ExpandableContextType>({
   isExpanded: false,
   toggleExpand: () => {},
-  expandDirection: 'vertical',
-  expandBehavior: 'replace',
-  transitionDuration: 300,
-  initialDelay: 0,
 });
 
 const useExpandable = () => useContext(ExpandableContext);
 
 interface ExpandableProps {
-  children: ReactNode | ((props: { isExpanded: boolean }) => ReactNode);
-  expanded?: boolean;
-  onToggle?: () => void;
-  transitionDuration?: number;
-  expandDirection?: 'vertical' | 'horizontal' | 'both';
-  expandBehavior?: 'replace' | 'push';
-  initialDelay?: number;
-  onExpandStart?: () => void;
-  onExpandEnd?: () => void;
-  onCollapseStart?: () => void;
-  onCollapseEnd?: () => void;
-  style?: StyleProp<ViewStyle>;
+  children: ReactNode;
+  initialHeight?: number;
+  initialWidth?: number;
 }
 
-const Expandable: React.FC<ExpandableProps> = ({
+const Expandable = ({
   children,
-  expanded,
-  onToggle,
-  transitionDuration = 300,
-  expandDirection = 'vertical',
-  expandBehavior = 'replace',
-  initialDelay = 0,
-  onExpandStart,
-  onExpandEnd,
-  onCollapseStart,
-  onCollapseEnd,
-  style,
-}) => {
-  const [isExpandedInternal, setIsExpandedInternal] = useState(false);
-  const isExpanded = expanded !== undefined ? expanded : isExpandedInternal;
-  const toggleExpand = onToggle || (() => setIsExpandedInternal((prev) => !prev));
+  initialHeight = 200,
+  initialWidth = SCREEN_WIDTH - 32,
+}: ExpandableProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const toggleExpand = () => setIsExpanded((prev) => !prev);
 
-  useEffect(() => {
+  // Animation values
+  const progress = useSharedValue(0);
+  const translateY = useSharedValue(0);
+
+  // Gesture handler for drag to dismiss
+  const gestureHandler = useAnimatedGestureHandler({
+    onStart: (_, context: any) => {
+      context.startY = translateY.value;
+    },
+    onActive: (event, context) => {
+      if (isExpanded) {
+        translateY.value = context.startY + event.translationY;
+      }
+    },
+    onEnd: (event) => {
+      if (event.velocityY > 500 || event.translationY > SCREEN_HEIGHT * 0.2) {
+        translateY.value = withSpring(SCREEN_HEIGHT, SPRING_CONFIG);
+        progress.value = withTiming(0);
+        runOnJS(setIsExpanded)(false);
+      } else {
+        translateY.value = withSpring(0, SPRING_CONFIG);
+      }
+    },
+  });
+
+  // Animated styles for the container
+  const rStyle = useAnimatedStyle(() => {
+    const height = interpolate(progress.value, [0, 1], [initialHeight, SCREEN_HEIGHT]);
+
+    const width = interpolate(progress.value, [0, 1], [initialWidth, SCREEN_WIDTH]);
+
+    const borderRadius = interpolate(progress.value, [0, 1], [20, 0]);
+
+    const marginHorizontal = interpolate(progress.value, [0, 1], [16, 0]);
+
+    return {
+      height,
+      width,
+      borderRadius,
+      marginHorizontal,
+      transform: [{ translateY: translateY.value }],
+    };
+  });
+
+  // Effect to handle expansion state
+  React.useEffect(() => {
     if (isExpanded) {
-      onExpandStart?.();
+      progress.value = withSpring(1, SPRING_CONFIG);
+      translateY.value = withSpring(0, SPRING_CONFIG);
     } else {
-      onCollapseStart?.();
+      progress.value = withSpring(0, SPRING_CONFIG);
+      translateY.value = withSpring(0, SPRING_CONFIG);
     }
-  }, [isExpanded, onExpandStart, onCollapseStart]);
-
-  const contextValue: ExpandableContextType = {
-    isExpanded,
-    toggleExpand,
-    expandDirection,
-    expandBehavior,
-    transitionDuration,
-    initialDelay,
-    onExpandEnd,
-    onCollapseEnd,
-  };
+  }, [isExpanded]);
 
   return (
-    <ExpandableContext.Provider value={contextValue}>
-      <Animated.View style={[styles.container, style]}>
-        {typeof children === 'function' ? children({ isExpanded }) : children}
-      </Animated.View>
+    <ExpandableContext.Provider value={{ isExpanded, toggleExpand }}>
+      <PanGestureHandler onGestureEvent={gestureHandler}>
+        <Animated.View style={[styles.container, rStyle]}>
+          {isExpanded && <View style={styles.dragIndicator} />}
+          {children}
+        </Animated.View>
+      </PanGestureHandler>
     </ExpandableContext.Provider>
   );
 };
 
 interface ExpandableContentProps {
   children: ReactNode;
-  style?: StyleProp<ViewStyle>;
-  keepMounted?: boolean;
 }
 
-const ExpandableContent: React.FC<ExpandableContentProps> = ({
-  children,
-  style,
-  keepMounted = false,
-}) => {
-  const { isExpanded, transitionDuration } = useExpandable();
-  const [height] = useState(new Animated.Value(0));
-
-  useEffect(() => {
-    LayoutAnimation.configureNext(
-      LayoutAnimation.create(
-        transitionDuration,
-        LayoutAnimation.Types.easeInEaseOut,
-        LayoutAnimation.Properties.opacity
-      )
-    );
-  }, [isExpanded, transitionDuration]);
-
-  if (!isExpanded && !keepMounted) return null;
-
-  return <Animated.View style={[styles.expandableContent, style]}>{children}</Animated.View>;
-};
-
-interface ExpandableCardProps {
-  children: ReactNode;
-  style?: StyleProp<ViewStyle>;
-  collapsedSize?: { width?: number; height?: number };
-  expandedSize?: { width?: number; height?: number };
-  hoverToExpand?: boolean;
-}
-
-const ExpandableCard: React.FC<ExpandableCardProps> = ({
-  children,
-  style,
-  collapsedSize = { width: 320, height: 211 },
-  expandedSize = { width: 480, height: undefined },
-}) => {
+const ExpandableContent = ({ children }: ExpandableContentProps) => {
   const { isExpanded } = useExpandable();
-  const [cardSize] = useState({
-    width: new Animated.Value(collapsedSize.width || 320),
-    height: new Animated.Value(collapsedSize.height || 211),
-  });
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.spring(cardSize.width, {
-        toValue: isExpanded ? expandedSize.width || collapsedSize.width! : collapsedSize.width!,
-        useNativeDriver: false,
-      }),
-      Animated.spring(cardSize.height, {
-        toValue: isExpanded ? expandedSize.height || collapsedSize.height! : collapsedSize.height!,
-        useNativeDriver: false,
-      }),
-    ]).start();
-  }, [isExpanded]);
+  if (!isExpanded) return null;
 
-  return (
-    <Animated.View
-      style={[
-        styles.card,
-        {
-          width: cardSize.width,
-          height: cardSize.height,
-        },
-        style,
-      ]}>
-      {children}
-    </Animated.View>
-  );
+  return <View style={styles.content}>{children}</View>;
 };
 
-const ExpandableTrigger: React.FC<{
+interface ExpandableTriggerProps {
   children: ReactNode;
-  style?: StyleProp<ViewStyle>;
-}> = ({ children, style }) => {
-  const { toggleExpand } = useExpandable();
+}
 
-  return (
-    <Pressable onPress={toggleExpand} style={[styles.trigger, style]}>
-      {children}
-    </Pressable>
-  );
+const ExpandableTrigger = ({ children }: ExpandableTriggerProps) => {
+  const { toggleExpand, isExpanded } = useExpandable();
+
+  if (isExpanded) return null;
+
+  return <Pressable onPress={toggleExpand}>{children}</Pressable>;
 };
-
-const ExpandableCardHeader: React.FC<{
-  children: ReactNode;
-  style?: StyleProp<ViewStyle>;
-}> = ({ children, style }) => <View style={[styles.cardHeader, style]}>{children}</View>;
-
-const ExpandableCardContent: React.FC<{
-  children: ReactNode;
-  style?: StyleProp<ViewStyle>;
-}> = ({ children, style }) => <View style={[styles.cardContent, style]}>{children}</View>;
-
-const ExpandableCardFooter: React.FC<{
-  children: ReactNode;
-  style?: StyleProp<ViewStyle>;
-}> = ({ children, style }) => <View style={[styles.cardFooter, style]}>{children}</View>;
 
 const styles = StyleSheet.create({
   container: {
-    overflow: 'hidden',
-  },
-  expandableContent: {
-    overflow: 'hidden',
-  },
-  card: {
     backgroundColor: 'white',
-    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 5,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -223,39 +147,19 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
-    overflow: 'hidden',
   },
-  trigger: {
-    cursor: 'pointer',
+  content: {
+    flex: 1,
+    padding: 20,
   },
-  cardHeader: {
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  cardContent: {
-    padding: 16,
-    paddingTop: 0,
-    flexGrow: 1,
-  },
-  cardFooter: {
-    padding: 16,
-    paddingTop: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
+  dragIndicator: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#DEDEDE',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 10,
   },
 });
 
-export {
-  Expandable,
-  useExpandable,
-  ExpandableCard,
-  ExpandableContent,
-  ExpandableContext,
-  ExpandableTrigger,
-  ExpandableCardHeader,
-  ExpandableCardContent,
-  ExpandableCardFooter,
-};
+export { Expandable, ExpandableContent, ExpandableTrigger, useExpandable };
