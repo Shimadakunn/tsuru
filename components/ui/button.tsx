@@ -25,7 +25,7 @@ export function Button({ children, onPress, className }: ButtonProps) {
       onPressOut={() => animatePress(false)}
       onPress={onPress}>
       <Animated.View
-        className={`border-border items-center justify-center rounded-full border-2 bg-white ${className}`}
+        className={`border-border items-center justify-center rounded-full border-2 ${className}`}
         style={{
           transform: translate.getTranslateTransform(),
           shadowColor: '#000',

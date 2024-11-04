@@ -1,12 +1,14 @@
 import { Stack } from 'expo-router';
 import { StyleSheet, View, Text, SafeAreaView } from 'react-native';
+import Footer from '~/components/footer';
 
 export default function Home() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <SafeAreaView className="bg-background flex-1">
-        <Text>Coins</Text>
+      <SafeAreaView className="flex-1 bg-background ">
+        <Text>History</Text>
+        <Footer />
       </SafeAreaView>
     </>
   );
