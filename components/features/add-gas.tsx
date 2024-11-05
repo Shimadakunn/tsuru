@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 
 import { Button, Text, Modal, Input } from '~/components/ui';
+import GasBlack from '~/public/header-icons/gas-black.png';
 
 interface AddGasProps {
   showGas: boolean;
@@ -49,9 +50,12 @@ const AddGas = ({ showGas, setShowGas }: AddGasProps) => {
       <View className="h-full w-full flex-col items-center justify-between gap-2">
         <View className="flex w-full flex-col gap-2">
           {/* Add Gas Title */}
-          <Text className="text-2xl" style={{ fontFamily: 'Lexend_700Bold' }}>
-            Refill Gas Tank
-          </Text>
+          <View className="flex flex-row items-center justify-start gap-2">
+            <Image source={GasBlack} className="h-6 w-6" />
+            <Text className="text-2xl" style={{ fontFamily: 'Lexend_700Bold' }}>
+              Refill Gas Tank
+            </Text>
+          </View>
           {/* Description */}
           <Text className="text-sm">
             Top up your wallet with gas to be able to send transactions.

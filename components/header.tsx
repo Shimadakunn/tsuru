@@ -1,4 +1,3 @@
-import { router } from 'expo-router';
 import { Scan } from 'lucide-react-native';
 import { useState } from 'react';
 import { View, Image, Pressable } from 'react-native';
@@ -9,9 +8,10 @@ import GasBlack from '../public/header-icons/gas-black.png';
 import Logo from '../public/logo.png';
 
 import AddGas from '~/components/features/add-gas';
-
+import ScanModal from '~/components/features/scan';
 export default function Header() {
   const [showGas, setShowGas] = useState(false);
+  const [showScan, setShowScan] = useState(false);
   return (
     <View className="fl flex h-16 w-full flex-row items-center justify-between bg-background px-2">
       <View className="flex flex-row items-center justify-center gap-1">
@@ -21,7 +21,7 @@ export default function Header() {
         </Text>
       </View>
       <View className="flex flex-row items-center justify-center gap-2">
-        <Button className="h-10 w-10 bg-white" onPress={() => router.push('/finance')}>
+        <Button className="h-10 w-10 bg-white" onPress={() => setShowScan(true)}>
           <Scan size={20} color="black" strokeWidth={3} />
         </Button>
         <Button
@@ -32,6 +32,7 @@ export default function Header() {
         </Button>
       </View>
       <AddGas showGas={showGas} setShowGas={setShowGas} />
+      <ScanModal showScan={showScan} setShowScan={setShowScan} />
     </View>
   );
 }

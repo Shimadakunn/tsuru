@@ -1,3 +1,4 @@
+import { Repeat, Send } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { View, Image } from 'react-native';
 import { toast } from 'sonner-native';
@@ -70,17 +71,23 @@ const Cryptos = () => {
               <Button
                 onPress={() => setShowSend(true)}
                 className="rounded-full bg-background px-12 py-2">
-                <Text className="text-2xl text-white" style={{ fontFamily: 'Lexend_700Bold' }}>
-                  Swap
-                </Text>
+                <View className="flex flex-row items-center justify-start gap-2">
+                  <Text className="text-2xl text-white" style={{ fontFamily: 'Lexend_700Bold' }}>
+                    Swap
+                  </Text>
+                  <Repeat size={20} color="white" strokeWidth={3} />
+                </View>
                 <Swap showSwap={showSend} setShowSwap={setShowSend} />
               </Button>
               <Button
                 onPress={() => toast.success('Send')}
                 className="rounded-full bg-background px-12 py-2">
-                <Text className="text-2xl text-white" style={{ fontFamily: 'Lexend_700Bold' }}>
-                  Send
-                </Text>
+                <View className="flex flex-row items-center justify-start gap-2">
+                  <Text className="text-2xl text-white" style={{ fontFamily: 'Lexend_700Bold' }}>
+                    Send
+                  </Text>
+                  <Send size={20} color="white" strokeWidth={3} />
+                </View>
               </Button>
             </View>
           </View>

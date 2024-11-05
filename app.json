@@ -27,6 +27,12 @@
             "./node_modules/@expo-google-fonts/lexend/Lexend_400Regular.ttf"
           ]
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Tsuru to access your camera"
+        }
       ]
     ],
     "experiments": {

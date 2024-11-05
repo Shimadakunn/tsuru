@@ -49,6 +49,7 @@ export default function RootLayout() {
           toastOptions={{
             style: {
               width: '35%',
+              paddingVertical: 6,
               marginHorizontal: 'auto',
               backgroundColor: 'white',
               borderRadius: 10,

@@ -1,3 +1,4 @@
+import { Repeat } from 'lucide-react-native';
 import { useState } from 'react';
 import {
   View,
@@ -48,9 +49,12 @@ const Swap = ({ showSwap, setShowSwap }: SwapProps) => {
       style={{ margin: 0 }}>
       {/* Cryptos Amount Input */}
       <View className="flex w-full flex-col gap-2">
-        <Text className="text-2xl" style={{ fontFamily: 'Lexend_700Bold' }}>
-          Swap Tokens
-        </Text>
+        <View className="flex flex-row items-center justify-start gap-2">
+          <Repeat size={20} color="black" strokeWidth={3} />
+          <Text className="text-2xl" style={{ fontFamily: 'Lexend_700Bold' }}>
+            Swap Tokens
+          </Text>
+        </View>
         {/* Swapping Crypto */}
         <View className="relative">
           <InputComplexe
