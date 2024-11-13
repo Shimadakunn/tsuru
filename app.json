@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "tsuru",
+    "newArchEnabled": true,
     "slug": "tsuru",
     "version": "1.0.0",
     "scheme": "tsuru",

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { View, Image } from 'react-native';
 import { toast } from 'sonner-native';
 
+import SendModal from '~/components/features/send';
 import Swap from '~/components/features/swap';
 import { Button } from '~/components/ui';
 import { Expandable, ExpandableContent, ExpandableTrigger } from '~/components/ui/rectangle';
@@ -10,6 +11,7 @@ import { Text } from '~/components/ui/text';
 import { formatBalance } from '~/utils/formatBalance';
 
 const Cryptos = () => {
+  const [showSwap, setShowSwap] = useState(false);
   const [showSend, setShowSend] = useState(false);
   return (
     <>
@@ -69,7 +71,7 @@ const Cryptos = () => {
             {/* Swap and Send Buttons*/}
             <View className="absolute bottom-0 w-full flex-row items-end justify-around border p-4">
               <Button
-                onPress={() => setShowSend(true)}
+                onPress={() => setShowSwap(true)}
                 className="rounded-full bg-background px-12 py-2">
                 <View className="flex flex-row items-center justify-start gap-2">
                   <Text className="text-2xl text-white" style={{ fontFamily: 'Lexend_700Bold' }}>
@@ -77,10 +79,10 @@ const Cryptos = () => {
                   </Text>
                   <Repeat size={20} color="white" strokeWidth={3} />
                 </View>
-                <Swap showSwap={showSend} setShowSwap={setShowSend} />
+                <Swap showSwap={showSwap} setShowSwap={setShowSwap} />
               </Button>
               <Button
-                onPress={() => toast.success('Send')}
+                onPress={() => setShowSend(true)}
                 className="rounded-full bg-background px-12 py-2">
                 <View className="flex flex-row items-center justify-start gap-2">
                   <Text className="text-2xl text-white" style={{ fontFamily: 'Lexend_700Bold' }}>
@@ -88,6 +90,7 @@ const Cryptos = () => {
                   </Text>
                   <Send size={20} color="white" strokeWidth={3} />
                 </View>
+                <SendModal showSend={showSend} setShowSend={setShowSend} />
               </Button>
             </View>
           </View>

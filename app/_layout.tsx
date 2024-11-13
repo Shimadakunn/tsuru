@@ -1,10 +1,10 @@
-import '../global.css';
 import * as Font from 'expo-font';
 import { Stack } from 'expo-router';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Toaster } from 'sonner-native';
+import '../global.css';
 
 // import { ExpandableProvider } from '~/components/ui/rectangle';
 
@@ -41,7 +41,7 @@ export default function RootLayout() {
             animation: 'none',
             gestureEnabled: false,
           }}>
-          <Stack.Screen name="wallet " options={{ headerShown: false, animation: 'none' }} />
+          <Stack.Screen name="wallet" options={{ headerShown: false, animation: 'none' }} />
         </Stack>
         <Toaster
           gap={10}
