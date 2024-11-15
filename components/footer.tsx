@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
-import { useRouter, usePathname } from 'expo-router';
-import { View, Image, Pressable } from 'react-native';
+import { usePathname, useRouter } from 'expo-router';
+import { Image, Pressable, View } from 'react-native';
 
 export default function Footer() {
   const router = useRouter();

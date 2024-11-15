@@ -6,10 +6,6 @@ export type TokenType = {
   balance?: string;
   decimals?: number;
   rate?: string;
-  allowance?: string;
-  aave?: string;
-  aavebalance?: string;
-  apy?: string;
 };
 
 export const tokens: {
@@ -19,6 +15,8 @@ export const tokens: {
     name: 'Ethereum',
     coin: 'ETH',
     network: 'arbitrum',
+    balance: '0.001',
+    rate: '3000',
   },
   usdc: {
     name: 'USD Coin',

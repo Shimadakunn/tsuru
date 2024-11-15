@@ -1,7 +1,6 @@
 {
   "expo": {
     "name": "tsuru",
-    "newArchEnabled": true,
     "slug": "tsuru",
     "version": "1.0.0",
     "scheme": "tsuru",
@@ -50,13 +49,16 @@
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.shimadakunn.tsuru"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./public/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": ["android.permission.CAMERA", "android.permission.RECORD_AUDIO"],
+      "package": "com.shimadakunn.tsuru"
     }
   }
 }

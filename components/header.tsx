@@ -1,14 +1,14 @@
 import { Scan } from 'lucide-react-native';
 import { useState } from 'react';
-import { View, Image, Pressable } from 'react-native';
+import { Image, View } from 'react-native';
 
-import { Button } from './ui/button';
-import { Text } from './ui/text';
 import GasBlack from '../public/header-icons/gas-black.png';
 import Logo from '../public/logo.png';
+import { Button } from './ui/button';
+import { Text } from './ui/text';
 
-import AddGas from '~/components/features/add-gas';
-import ScanModal from '~/components/features/scan';
+import AddGas from '~/components/modals/add-gas';
+import ScanModal from '~/components/modals/scan';
 export default function Header() {
   const [showGas, setShowGas] = useState(false);
   const [showScan, setShowScan] = useState(false);

@@ -1,20 +1,12 @@
 import React, { useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  StyleProp,
-  ViewStyle,
-  Text,
-  PanResponderGestureState,
-  Keyboard,
-  TouchableWithoutFeedback,
-} from 'react-native';
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import ModalComponent, { ModalProps } from 'react-native-modal';
 
 interface Props {
   hideModal: () => void;
   hideCloseButton?: boolean;
   style?: StyleProp<ViewStyle>;
+  height?: number;
 }
 
 const Modal = ({
@@ -22,35 +14,42 @@ const Modal = ({
   hideCloseButton,
   style,
   children,
+  height,
   ...props
 }: Props & Partial<ModalProps>) => {
   const [offsetY, setOffsetY] = useState(0);
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <ModalComponent
-        {...props}
-        style={styles.modalContainer}
-        onSwipeMove={(percentageShown: number) => {
-          const newOffset = Math.max(0, 1 - percentageShown) * 100;
-          setOffsetY(newOffset);
-        }}
-        onSwipeComplete={() => {
-          setOffsetY(0);
-          hideModal();
-        }}
-        onSwipeCancel={() => {
-          setOffsetY(0);
-        }}
-        swipeDirection={['down']}
-        propagateSwipe
-        swipeThreshold={50}>
-        <View style={[styles.modal, style, { transform: [{ translateY: Math.max(0, offsetY) }] }]}>
-          {/* <View style={styles.indicator} /> */}
-          {children}
-        </View>
-      </ModalComponent>
-    </TouchableWithoutFeedback>
+    <ModalComponent
+      {...props}
+      style={styles.modalContainer}
+      onSwipeMove={(percentageShown: number) => {
+        const newOffset = Math.max(0, 1 - percentageShown) * 100;
+        setOffsetY(newOffset);
+      }}
+      onSwipeComplete={() => {
+        setOffsetY(0);
+        hideModal();
+      }}
+      onSwipeCancel={() => {
+        setOffsetY(0);
+      }}
+      swipeDirection={['down']}
+      propagateSwipe
+      swipeThreshold={50}>
+      <View
+        style={[
+          styles.modal,
+          style,
+          {
+            transform: [{ translateY: Math.max(0, offsetY) }],
+            flex: height || 0.85,
+          },
+        ]}>
+        {/* <View style={styles.indicator} /> */}
+        {children}
+      </View>
+    </ModalComponent>
   );
 };
 
@@ -76,14 +75,13 @@ const styles = StyleSheet.create({
   },
   modal: {
     borderWidth: 3,
-    flex: 0.65,
     flexDirection: 'column',
     justifyContent: 'space-between',
     gap: 20,
     alignItems: 'center',
     backgroundColor: 'white',
     borderRadius: 30,
-    paddingHorizontal: 20,
+    paddingHorizontal: 18,
     paddingVertical: 16,
   },
   text: {

@@ -2,10 +2,10 @@ import { Stack } from 'expo-router';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import Footer from '~/components/footer';
 import Header from '~/components/header';
-import Balance from '~/components/pages/wallet-page/balance';
-import Cryptos from '~/components/pages/wallet-page/cryptos';
+import Actions from '~/components/pages/actions';
+import Balance from '~/components/pages/balance';
+import Cryptos from '~/components/pages/cryptos';
 
 export default function Home() {
   return (
@@ -16,9 +16,10 @@ export default function Home() {
         <View className="mb-4 w-full">
           <Header />
           <Balance />
+          <Actions />
         </View>
         <Cryptos />
-        <Footer />
+        {/* <Footer /> */}
       </SafeAreaView>
     </>
   );

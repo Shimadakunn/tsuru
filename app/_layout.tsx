@@ -1,12 +1,10 @@
 import * as Font from 'expo-font';
-import { Stack } from 'expo-router';
+import { Slot } from 'expo-router';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Toaster } from 'sonner-native';
 import '../global.css';
-
-// import { ExpandableProvider } from '~/components/ui/rectangle';
 
 export const unstable_settings = {
   initialRouteName: 'wallet',
@@ -35,14 +33,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            animation: 'none',
-            gestureEnabled: false,
-          }}>
-          <Stack.Screen name="wallet" options={{ headerShown: false, animation: 'none' }} />
-        </Stack>
+        <Slot />
         <Toaster
           gap={10}
           autoWiggleOnUpdate="always"
