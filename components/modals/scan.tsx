@@ -1,85 +1,142 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { Scan } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Image as ImageIcon } from 'lucide-react-native';
 import { useEffect } from 'react';
-import { View, Keyboard } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { toast } from 'sonner-native';
 
-import { Text, Modal } from '~/components/ui';
-import { Overlay } from '~/components/ui/overlay';
+import { FullScreenModal } from '../ui/full-screen-modal';
+
+import { QROverlay } from '~/components/ui/qr-overlay';
 
 interface ScanProps {
   showScan: boolean;
   setShowScan: (show: boolean) => void;
+  onScan: (data: string) => void;
 }
 
-const ScanModal = ({ showScan, setShowScan }: ScanProps) => {
+const ScanModal = ({ showScan, setShowScan, onScan }: ScanProps) => {
   const [permission, requestPermission] = useCameraPermissions();
+  const [galleryPermission, requestGalleryPermission] = ImagePicker.useMediaLibraryPermissions();
 
   useEffect(() => {
-    if (permission?.status === 'undetermined' && showScan) {
-      requestPermission();
+    if (showScan) {
+      if (permission?.status === 'undetermined') {
+        requestPermission();
+      }
+      if (galleryPermission?.status === 'undetermined') {
+        requestGalleryPermission();
+      }
     }
   }, [permission, showScan]);
 
-  return (
-    <Modal
-      isVisible={showScan}
-      onBackdropPress={() => {
-        Keyboard.dismiss();
-        setShowScan(false);
-      }}
-      onBackButtonPress={() => {
-        Keyboard.dismiss();
-        setShowScan(false);
-      }}
-      swipeDirection="down"
-      onSwipeComplete={() => {
-        Keyboard.dismiss();
-        setShowScan(false);
-      }}
-      hideModal={() => {
-        Keyboard.dismiss();
-        setShowScan(false);
-      }}
-      animationIn="slideInUp"
-      animationOut="slideOutDown"
-      animationInTiming={400}
-      animationOutTiming={300}
-      backdropTransitionInTiming={400}
-      backdropTransitionOutTiming={300}
-      useNativeDriver
-      style={{ margin: 0 }}>
-      <View className="h-full w-full flex-col items-center justify-between gap-2">
-        <View className="flex w-full flex-col gap-1">
-          {/* Add Gas Title */}
-          <View className="flex flex-row items-center justify-start gap-2">
-            <Scan size={20} color="black" strokeWidth={3} />
-            <Text className="text-2xl" style={{ fontFamily: 'Lexend_700Bold' }}>
-              Scan
-            </Text>
-          </View>
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
 
-          {/* Description */}
-          <Text className="text-sm">
-            Read a QR code to send tokens to an address or connect to a decentralized app.
-          </Text>
-        </View>
-        <View className="w-full flex-1">
-          <CameraView
-            style={{
-              width: '100%',
-              height: '100%',
-              borderRadius: 10,
-            }}
-            facing="back"
-            onBarcodeScanned={({ data }) => {
-              console.log(data);
-            }}
-          />
-          <Overlay />
-        </View>
+    if (!result.canceled && result.assets[0].uri.startsWith('0x')) {
+      onScan(result.assets[0].uri);
+      setShowScan(false);
+    } else {
+      toast.error('Invalid address');
+    }
+  };
+
+  return (
+    <FullScreenModal visible={showScan} onClose={() => setShowScan(false)}>
+      <View className="absolute right-1/2 top-0 h-12 w-12 translate-x-1/2 translate-y-1/2 " />
+      <LinearGradient
+        colors={['black', 'transparent']}
+        locations={[0, 0.2]}
+        style={[StyleSheet.absoluteFillObject, { borderRadius: 16 }]}
+      />
+      {/* <View style={styles.header}>
+          <View style={styles.titleContainer}>
+            <Scan size={20} color="white" strokeWidth={3} />
+            <Text style={styles.title}>Scan QR Code</Text>
+          </View>
+        </View> */}
+
+      <View style={styles.cameraContainer}>
+        <CameraView
+          style={StyleSheet.absoluteFill}
+          facing="back"
+          onBarcodeScanned={({ data }) => {
+            if (data.startsWith('0x')) {
+              onScan(data);
+              setShowScan(false);
+            } else {
+              toast.error('Invalid address');
+            }
+          }}
+        />
+        <QROverlay />
       </View>
-    </Modal>
+
+      <TouchableOpacity
+        onPress={pickImage}
+        className="absolute bottom-1/4 right-1/2 translate-x-1/2">
+        <ImageIcon size={24} color="white" />
+      </TouchableOpacity>
+
+      {/* <Text style={styles.instructions}>Position the QR code within the frame to scan</Text> */}
+    </FullScreenModal>
   );
 };
 
-export default ScanModal;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'black',
+    position: 'relative',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    paddingTop: 50,
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  title: {
+    color: 'white',
+    fontSize: 20,
+    fontFamily: 'Lexend_700Bold',
+  },
+  dragIndicator: {
+    position: 'absolute',
+    top: 12,
+    width: 40,
+    height: 4,
+    backgroundColor: '#ffffff50',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  galleryButton: {
+    padding: 8,
+  },
+  cameraContainer: {
+    flex: 1,
+  },
+  instructions: {
+    position: 'absolute',
+    bottom: 0,
+    color: 'white',
+    textAlign: 'center',
+    padding: 20,
+    fontSize: 16,
+  },
+});
+
+export { ScanModal };

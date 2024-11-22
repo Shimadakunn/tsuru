@@ -1,207 +1,87 @@
-import { Repeat, Send } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
-import { Image, View } from 'react-native';
+import React, { useState } from 'react';
+import { ScrollView, View } from 'react-native';
 
-import ExchangeModal from '~/components/modals/exchange';
-import { Button } from '~/components/ui';
-import { Expandable, ExpandableContent, ExpandableTrigger } from '~/components/ui/rectangle';
-import { Text } from '~/components/ui/text';
+import { SendModal, SwapModal } from '../modals';
+import { Balance, Chart, Defi, Footer, Header, Trigger } from './cryptosComponents';
+
+import { Separator } from '~/components/ui';
+import { ExpandableModal, ModalContent, ModalTrigger } from '~/components/ui/rectangle';
 import { TokenType, tokens } from '~/config';
-import { tokenIcons } from '~/config/images';
-import { formatBalance } from '~/utils/formatBalance';
+
+const CryptoCard = ({
+  token,
+  onShowExchange,
+  onShowSend,
+}: {
+  token: TokenType;
+  onShowExchange: (orderType: 'buy' | 'sell') => void;
+  onShowSend: () => void;
+}) => {
+  return (
+    <ExpandableModal>
+      <ModalTrigger>
+        <Trigger token={token} />
+      </ModalTrigger>
+
+      <ModalContent>
+        <View className="relative flex-1">
+          <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 80 }}>
+            <Header token={token} />
+            <Chart />
+            <Separator />
+            <Balance token={token} onShowSend={onShowSend} />
+            <Separator />
+            <Defi />
+          </ScrollView>
+          <Footer onShowExchange={onShowExchange} />
+        </View>
+      </ModalContent>
+    </ExpandableModal>
+  );
+};
 
 const Cryptos = () => {
   const [showExchange, setShowExchange] = useState(false);
+  const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy');
+  const [selectedToken, setSelectedToken] = useState<TokenType | null>(null);
+  const [showSend, setShowSend] = useState(false);
   const token: TokenType = tokens.ethereum;
-  useEffect(() => {
-    console.log(token.coin.toLowerCase());
-  }, [token]);
+  const token2: TokenType = tokens.usdc;
+
+  const handleShowExchange = (type: 'buy' | 'sell', token: TokenType) => {
+    setOrderType(type);
+    setSelectedToken(token);
+    setShowExchange(true);
+  };
+
+  const handleShowSend = (token: TokenType) => {
+    setSelectedToken(token);
+    setShowSend(true);
+  };
+
   return (
     <>
-      <Expandable>
-        <ExpandableTrigger>
-          <View className="mx-auto mt-3 h-[75px] w-[95%] flex-row items-center justify-between rounded-xl border-2 bg-white p-3">
-            <View className="flex-row items-center gap-2">
-              <Image
-                source={tokenIcons[token.coin.toLowerCase() as keyof typeof tokenIcons]}
-                className="h-11 w-11"
-              />
-              <View className="">
-                <Text className=" text-xl " style={{ fontFamily: 'Lexend_700Bold' }}>
-                  Ethereum
-                </Text>
-                <Text className="text-gray-500" style={{ fontFamily: 'GaeilgeKids' }}>
-                  0.001 ETH
-                </Text>
-              </View>
-            </View>
-            <View className="flex items-end justify-center">
-              <Text className="text-2xl font-black" style={{ fontFamily: 'GaeilgeKids' }}>
-                250.32 $US
-              </Text>
-              <Text className="text-gray-500" style={{ fontFamily: 'GaeilgeKids' }}>
-                + {formatBalance(28, 2)} %
-              </Text>
-            </View>
-          </View>
-        </ExpandableTrigger>
-        <ExpandableContent>
-          <View className="relative flex-1">
-            {/* Crypto Image, Name, Price, Change, Balance */}
-            <View className="h-[16vh] w-full flex-row items-center justify-between px-6 py-4">
-              <View className="flex-col items-start justify-between gap-2">
-                <Image
-                  source={require('~/public/tokens-icons/eth.png')}
-                  className="mt-3 h-16 w-16"
-                />
-                <View className="flex-1 items-end justify-end">
-                  <Text className="text-2xl" style={{ fontFamily: 'Lexend_700Bold' }}>
-                    Ethereum
-                  </Text>
-                </View>
-              </View>
-              <View className="h-full flex-col items-end justify-between gap-2">
-                <Text className="text-xl text-gray-800" style={{ fontFamily: 'GaeilgeKids' }}>
-                  {' '}
-                </Text>
-                <View className="flex-col items-end ">
-                  <Text className="text-lg text-gray-800" style={{ fontFamily: 'GaeilgeKids' }}>
-                    + {formatBalance(28, 2)} %
-                  </Text>
-                  <Text className="text-4xl" style={{ fontFamily: 'GaeilgeKids' }}>
-                    2,533.23 $US
-                  </Text>
-                </View>
-              </View>
-            </View>
-            {/* Swap and Send Buttons*/}
-            <View className="absolute bottom-0 w-full flex-row items-center justify-center gap-5 border py-4">
-              <Button
-                onPress={() => setShowExchange(true)}
-                className="h-14 w-[43vw] rounded-xl bg-background">
-                <View className="flex flex-row items-center justify-start gap-2">
-                  <Text className="text-2xl text-white" style={{ fontFamily: 'Lexend_700Bold' }}>
-                    Sell
-                  </Text>
-                  <Repeat size={20} color="white" strokeWidth={3} />
-                </View>
-                <ExchangeModal
-                  showExchange={showExchange}
-                  setShowExchange={setShowExchange}
-                  token={token}
-                />
-              </Button>
-              <Button
-                onPress={() => setShowExchange(true)}
-                className="h-14 w-[43vw] rounded-xl bg-background">
-                <View className="flex flex-row items-center justify-start gap-2">
-                  <Text className="text-2xl text-white" style={{ fontFamily: 'Lexend_700Bold' }}>
-                    Buy
-                  </Text>
-                  <Send size={20} color="white" strokeWidth={3} />
-                </View>
-                <ExchangeModal
-                  showExchange={showExchange}
-                  setShowExchange={setShowExchange}
-                  token={token}
-                />
-              </Button>
-            </View>
-          </View>
-        </ExpandableContent>
-      </Expandable>
-      <Expandable>
-        <ExpandableTrigger>
-          <View className="mx-auto mt-3 h-[75px] w-[95%] flex-row items-center justify-between rounded-xl border-2 bg-white p-3">
-            <View className="flex-row items-center gap-2">
-              <Image
-                source={tokenIcons[token.coin.toLowerCase() as keyof typeof tokenIcons]}
-                className="h-11 w-11"
-              />
-              <View className="">
-                <Text className=" text-xl " style={{ fontFamily: 'Lexend_700Bold' }}>
-                  Ethereum
-                </Text>
-                <Text className="text-gray-500" style={{ fontFamily: 'GaeilgeKids' }}>
-                  0.001 ETH
-                </Text>
-              </View>
-            </View>
-            <View className="flex items-end justify-center">
-              <Text className="text-2xl font-black" style={{ fontFamily: 'GaeilgeKids' }}>
-                250.32 $US
-              </Text>
-              <Text className="text-gray-500" style={{ fontFamily: 'GaeilgeKids' }}>
-                + {formatBalance(28, 2)} %
-              </Text>
-            </View>
-          </View>
-        </ExpandableTrigger>
-        <ExpandableContent>
-          <View className="relative flex-1">
-            {/* Crypto Image, Name, Price, Change, Balance */}
-            <View className="h-[16vh] w-full flex-row items-center justify-between px-6 py-4">
-              <View className="flex-col items-start justify-between gap-2">
-                <Image
-                  source={require('~/public/tokens-icons/eth.png')}
-                  className="mt-3 h-16 w-16"
-                />
-                <View className="flex-1 items-end justify-end">
-                  <Text className="text-2xl" style={{ fontFamily: 'Lexend_700Bold' }}>
-                    Ethereum
-                  </Text>
-                </View>
-              </View>
-              <View className="h-full flex-col items-end justify-between gap-2">
-                <Text className="text-xl text-gray-800" style={{ fontFamily: 'GaeilgeKids' }}>
-                  {' '}
-                </Text>
-                <View className="flex-col items-end ">
-                  <Text className="text-lg text-gray-800" style={{ fontFamily: 'GaeilgeKids' }}>
-                    + {formatBalance(28, 2)} %
-                  </Text>
-                  <Text className="text-4xl" style={{ fontFamily: 'GaeilgeKids' }}>
-                    2,533.23 $US
-                  </Text>
-                </View>
-              </View>
-            </View>
-            {/* Swap and Send Buttons*/}
-            <View className="absolute bottom-0 w-full flex-row items-center justify-center gap-5 border py-4">
-              <Button
-                onPress={() => setShowExchange(true)}
-                className="h-14 w-[43vw] rounded-xl bg-background">
-                <View className="flex flex-row items-center justify-start gap-2">
-                  <Text className="text-2xl text-white" style={{ fontFamily: 'Lexend_700Bold' }}>
-                    Sell
-                  </Text>
-                  <Repeat size={20} color="white" strokeWidth={3} />
-                </View>
-                <ExchangeModal
-                  showExchange={showExchange}
-                  setShowExchange={setShowExchange}
-                  token={token}
-                />
-              </Button>
-              <Button
-                onPress={() => setShowExchange(true)}
-                className="h-14 w-[43vw] rounded-xl bg-background">
-                <View className="flex flex-row items-center justify-start gap-2">
-                  <Text className="text-2xl text-white" style={{ fontFamily: 'Lexend_700Bold' }}>
-                    Buy
-                  </Text>
-                  <Send size={20} color="white" strokeWidth={3} />
-                </View>
-                <ExchangeModal
-                  showExchange={showExchange}
-                  setShowExchange={setShowExchange}
-                  token={token}
-                />
-              </Button>
-            </View>
-          </View>
-        </ExpandableContent>
-      </Expandable>
+      <CryptoCard
+        token={token}
+        onShowExchange={(type) => handleShowExchange(type, token)}
+        onShowSend={() => handleShowSend(token)}
+      />
+      <CryptoCard
+        token={token2}
+        onShowExchange={(type) => handleShowExchange(type, token2)}
+        onShowSend={() => handleShowSend(token2)}
+      />
+      {selectedToken && (
+        <SwapModal
+          showExchange={showExchange}
+          setShowExchange={setShowExchange}
+          token={selectedToken}
+          orderType={orderType}
+        />
+      )}
+      {selectedToken && (
+        <SendModal showSend={showSend} setShowSend={setShowSend} token={selectedToken} />
+      )}
     </>
   );
 };

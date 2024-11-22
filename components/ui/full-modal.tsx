@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, View, ViewStyle, Dimensions } from 'react-native';
 import ModalComponent, { ModalProps } from 'react-native-modal';
 
 interface Props {
@@ -7,14 +7,16 @@ interface Props {
   hideCloseButton?: boolean;
   style?: StyleProp<ViewStyle>;
   height?: number;
+  fullScreen?: boolean;
 }
 
-const Modal = ({
+const FullModal = ({
   hideModal,
   hideCloseButton,
   style,
   children,
   height,
+  fullScreen,
   ...props
 }: Props & Partial<ModalProps>) => {
   const [offsetY, setOffsetY] = useState(0);
@@ -32,28 +34,17 @@ const Modal = ({
       swipeDirection="down"
       onBackdropPress={hideModal}
       onBackButtonPress={hideModal}
-      onSwipeComplete={() => {
-        setOffsetY(0);
-        hideModal();
-      }}
-      style={styles.modalContainer}
-      onSwipeMove={(percentageShown: number) => {
-        const newOffset = Math.max(0, 1 - percentageShown) * 100;
-        setOffsetY(newOffset);
-      }}
-      propagateSwipe
-      swipeThreshold={50}
-      onModalHide={() => {
-        setOffsetY(0);
-      }}>
+      onSwipeComplete={hideModal}
+      style={[styles.modalContainer, fullScreen && styles.fullScreen]}>
       <View
         style={[
           styles.modal,
           style,
           {
             transform: [{ translateY: Math.max(0, offsetY) }],
-            flex: height || 0.85,
+            flex: fullScreen ? 1 : height || 0.85,
           },
+          fullScreen && styles.fullScreenModal,
         ]}>
         {children}
       </View>
@@ -94,6 +85,18 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 20,
   },
+  fullScreen: {
+    margin: 0,
+    marginBottom: 0,
+  },
+  fullScreenModal: {
+    borderRadius: 0,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    borderWidth: 0,
+    width: '100%',
+    height: '100%',
+  },
 });
 
-export default Modal;
+export default FullModal;

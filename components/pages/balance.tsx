@@ -4,14 +4,11 @@ import { formatBalance } from 'utils/formatBalance';
 
 export default function Balance() {
   return (
-    <View className="flex h-36 w-full items-start justify-center border border-gray-200 bg-background px-4">
+    <View className="flex w-full items-start justify-center border py-8 pl-6">
       <View className="flex flex-row items-end justify-center">
-        <Text
-          className="border border-background text-7xl text-white"
-          style={{ fontFamily: 'GaeilgeKids' }}>
-          {formatBalance(20.31038, 2)}
+        <Text className="text-6xl text-white" style={{ fontFamily: 'GaeilgeKids' }}>
+          {formatBalance(20.31038, 2)} $US
         </Text>
-        <Text className="ml-2 pb-2 text-4xl text-white">$US</Text>
       </View>
       <View className="flex flex-row items-center justify-start gap-2">
         <Text className="text-xl text-red-400">-${formatBalance(20.31038, 2)}</Text>

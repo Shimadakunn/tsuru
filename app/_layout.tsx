@@ -7,7 +7,7 @@ import { Toaster } from 'sonner-native';
 import '../global.css';
 
 export const unstable_settings = {
-  initialRouteName: 'wallet',
+  initialRouteName: 'home',
 };
 
 export default function RootLayout() {
@@ -39,8 +39,8 @@ export default function RootLayout() {
           autoWiggleOnUpdate="always"
           toastOptions={{
             style: {
-              width: '35%',
-              paddingVertical: 6,
+              width: '70%',
+              paddingVertical: 10,
               marginHorizontal: 'auto',
               backgroundColor: 'white',
               borderRadius: 10,

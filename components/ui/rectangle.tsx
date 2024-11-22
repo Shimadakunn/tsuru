@@ -1,27 +1,25 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, ReactNode, useContext, useState } from 'react';
 import {
-  View,
-  Pressable,
   Dimensions,
-  StyleSheet,
-  SafeAreaView,
   LayoutChangeEvent,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
 } from 'react-native';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  interpolate,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  useAnimatedGestureHandler,
-  runOnJS,
   withTiming,
-  interpolate,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Get screen dimensions for calculations
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
-// Spring animation configuration for smooth transitions
 const SPRING_CONFIG = {
   damping: 30,
   mass: 0.8,
@@ -31,168 +29,230 @@ const SPRING_CONFIG = {
   restSpeedThreshold: 0.01,
 };
 
-// Context type definition for sharing expansion state
-interface ExpandableContextType {
-  isExpanded: boolean;
-  toggleExpand: () => void;
+interface ExpandableModalContextType {
+  isOpen: boolean;
+  openModal: () => void;
+  closeModal: () => void;
+  triggerLayout: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null;
+  setTriggerLayout: (layout: { x: number; y: number; width: number; height: number }) => void;
+  scrollOffset: Animated.SharedValue<number>;
 }
 
-// Create context for sharing expansion state between components
-const ExpandableContext = createContext<ExpandableContextType>({
-  isExpanded: false,
-  toggleExpand: () => {},
+const ExpandableModalContext = createContext<ExpandableModalContextType>({
+  isOpen: false,
+  openModal: () => {},
+  closeModal: () => {},
+  triggerLayout: null,
+  setTriggerLayout: () => {},
+  scrollOffset: { value: 0 } as Animated.SharedValue<number>,
 });
 
-// Custom hook to access the expandable context
-const useExpandable = () => useContext(ExpandableContext);
+export const useExpandableModal = () => useContext(ExpandableModalContext);
 
-// Props interface for the main Expandable component
-interface ExpandableProps {
+interface ExpandableModalProps {
   children: ReactNode;
-  initialHeight?: number;
-  initialWidth?: number;
 }
 
-/**
- * Expandable component that can transition between a collapsed and expanded state
- * Features:
- * - Smooth spring animations
- * - Gesture-based dismissal when expanded
- * - Flexible initial dimensions
- * - Context-based state management
- */
-const Expandable = ({
-  children,
-  initialHeight = 83,
-  initialWidth = SCREEN_WIDTH,
-}: ExpandableProps) => {
-  // State for tracking expansion
-  const [isExpanded, setIsExpanded] = useState(false);
-  const toggleExpand = () => setIsExpanded((prev) => !prev);
+export const ExpandableModal = ({ children }: ExpandableModalProps) => {
+  const insets = useSafeAreaInsets();
+  const [isOpen, setIsOpen] = useState(false);
+  const [triggerLayout, setTriggerLayout] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
 
-  // Shared values for animations
-  const progress = useSharedValue(0); // Controls animation progress (0 = collapsed, 1 = expanded)
-  const translateY = useSharedValue(0); // Controls vertical position for drag dismissal
-
-  // Add position tracking
-  const [layout, setLayout] = useState({
-    x: 0,
-    y: 0,
-    width: initialWidth,
-    height: initialHeight,
-  });
-
-  // Handle layout changes to track position
-  const onLayout = (event: LayoutChangeEvent) => {
-    const { x, y, width, height } = event.nativeEvent.layout;
-    setLayout({ x, y, width, height });
+  const openModal = () => setIsOpen(true);
+  const closeModal = () => {
+    setTimeout(() => {
+      translateY.value = 0;
+      setIsOpen(false);
+    }, 400);
   };
 
-  // Handle drag gesture for dismissal
-  const gestureHandler = useAnimatedGestureHandler({
-    onStart: (_, context: any) => {
-      context.startY = translateY.value;
-    },
-    onActive: (event, context) => {
-      if (isExpanded) {
-        const newTranslation = context.startY + Math.max(0, event.translationY);
-        translateY.value = newTranslation;
+  const progress = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const scale = useSharedValue(1);
+  const scrollOffset = useSharedValue(0);
+  const isDraggingModal = useSharedValue(false);
+
+  const gesture = Gesture.Pan()
+    .onBegin(() => {
+      isDraggingModal.value = scrollOffset.value <= 0;
+    })
+    .onUpdate((event) => {
+      if (!isOpen) return;
+
+      if (isDraggingModal.value) {
+        translateY.value = Math.max(0, event.translationY);
+        const dragProgress = Math.min(event.translationY / SCREEN_HEIGHT, 1);
+        progress.value = withSpring(1 - dragProgress * 0.5, { damping: 10, stiffness: 100 });
       }
-    },
-    onEnd: (event) => {
-      // Dismiss if dragged far enough or with enough velocity
+    })
+    .onEnd((event) => {
+      if (!isDraggingModal.value) return;
+
       if (event.velocityY > 500 || event.translationY > SCREEN_HEIGHT * 0.2) {
-        translateY.value = withSpring(SCREEN_HEIGHT, SPRING_CONFIG);
-        progress.value = withTiming(0);
-        runOnJS(setIsExpanded)(false);
+        translateY.value = withSpring(SCREEN_HEIGHT, {
+          ...SPRING_CONFIG,
+          velocity: event.velocityY,
+        });
+        progress.value = withTiming(0, {
+          duration: 400,
+        });
+        runOnJS(closeModal)();
       } else {
         translateY.value = withSpring(0, SPRING_CONFIG);
+        progress.value = withSpring(1, { damping: 15, stiffness: 100 });
       }
-    },
-  });
+    });
 
-  // Updated animated styles for smoother transitions
   const rStyle = useAnimatedStyle(() => {
-    const height = interpolate(progress.value, [0, 1], [initialHeight, SCREEN_HEIGHT]);
-    const width = interpolate(progress.value, [0, 1], [initialWidth, SCREEN_WIDTH]);
-    const top = interpolate(progress.value, [0, 1], [layout.y, 0]);
-    const left = interpolate(progress.value, [0, 1], [layout.x, 0]);
+    if (!triggerLayout) return {};
+
+    const height = interpolate(progress.value, [0, 1], [triggerLayout.height, SCREEN_HEIGHT]);
+    const width = interpolate(progress.value, [0, 1], [triggerLayout.width, SCREEN_WIDTH]);
+    const top = interpolate(progress.value, [0, 1], [triggerLayout.y, 0]);
+    const left = interpolate(progress.value, [0, 1], [triggerLayout.x, 0]);
+
+    const originY = triggerLayout.y + triggerLayout.height / 2;
+    const originX = triggerLayout.x + triggerLayout.width / 2;
 
     return {
+      position: 'absolute',
       height,
       width,
+      top,
+      left,
       transform: [
         { translateY: translateY.value },
         {
-          scale: interpolate(progress.value, [0, 0.5, 1], [1, 1.02, 1]),
+          scale: interpolate(progress.value, [0, 0.5, 1], [1, 1.05, 1]),
         },
       ],
-      ...(isExpanded
-        ? {
-            position: 'absolute',
-            top,
-            left,
-            right: 0,
-            bottom: 0,
-            zIndex: 50,
-            backgroundColor: 'white',
-          }
-        : { position: 'relative', zIndex: 0, backgroundColor: 'transparent' }),
+      opacity: interpolate(progress.value, [0, 0.1], [0, 1]),
+      pointerEvents: isOpen ? 'auto' : 'none',
+      backgroundColor: 'white',
+      borderRadius: interpolate(progress.value, [0, 1], [8, 0]),
+      zIndex: 1000,
+      overflow: 'hidden',
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: interpolate(progress.value, [0, 1], [2, 5]),
+      },
+      shadowOpacity: interpolate(progress.value, [0, 1], [0.1, 0.3]),
+      shadowRadius: interpolate(progress.value, [0, 1], [4, 12]),
+      elevation: interpolate(progress.value, [0, 1], [2, 8]),
     };
   });
 
-  // Handle expansion state changes with updated timing
   React.useEffect(() => {
-    if (isExpanded) {
+    if (isOpen) {
       progress.value = withSpring(1, {
-        ...SPRING_CONFIG,
-        velocity: 1,
+        damping: 15,
+        stiffness: 100,
+        mass: 0.6,
       });
-      translateY.value = withSpring(0, SPRING_CONFIG);
+      translateY.value = withSpring(0, {
+        damping: 15,
+        stiffness: 100,
+      });
     } else {
-      progress.value = withSpring(0, {
-        ...SPRING_CONFIG,
-        velocity: 0,
+      progress.value = withTiming(0, {
+        duration: 400,
       });
-      translateY.value = withSpring(0, SPRING_CONFIG);
     }
-  }, [isExpanded]);
+  }, [isOpen]);
+
+  // Find the ModalTrigger and ModalContent children
+  const triggerChild = React.Children.toArray(children).find(
+    (child) => React.isValidElement(child) && child.type === ModalTrigger
+  );
+
+  const contentChild = React.Children.toArray(children).find(
+    (child) => React.isValidElement(child) && child.type === ModalContent
+  );
 
   return (
-    <ExpandableContext.Provider value={{ isExpanded, toggleExpand }}>
-      <PanGestureHandler onGestureEvent={gestureHandler}>
-        <Animated.View style={rStyle} className="pt-1" onLayout={onLayout}>
-          <Pressable onPress={isExpanded ? undefined : toggleExpand} style={{ flex: 1 }}>
-            <SafeAreaView className="flex-1">
-              {isExpanded && <View style={styles.dragIndicator} />}
-              {children}
-            </SafeAreaView>
-          </Pressable>
+    <ExpandableModalContext.Provider
+      value={{
+        isOpen,
+        openModal,
+        closeModal,
+        triggerLayout,
+        setTriggerLayout,
+        scrollOffset,
+      }}>
+      {triggerChild}
+      <GestureDetector gesture={gesture}>
+        <Animated.View style={rStyle}>
+          <View style={{ paddingTop: insets.top, flex: 1 }}>
+            <View style={styles.dragIndicator} />
+            <View style={{ flex: 1, paddingBottom: insets.bottom }}>{contentChild}</View>
+          </View>
         </Animated.View>
-      </PanGestureHandler>
-    </ExpandableContext.Provider>
+      </GestureDetector>
+    </ExpandableModalContext.Provider>
   );
 };
 
-/**
- * Component to render content only when expanded
- */
-const ExpandableContent = ({ children }: { children: ReactNode }) => {
-  const { isExpanded } = useExpandable();
-  if (!isExpanded) return null;
-  return <View style={styles.content}>{children}</View>;
+export const ModalTrigger = ({ children }: { children: ReactNode }) => {
+  const { openModal, setTriggerLayout } = useExpandableModal();
+
+  const measureTrigger = (event: LayoutChangeEvent) => {
+    event.target.measure((x, y, width, height, pageX, pageY) => {
+      setTriggerLayout({ x: pageX, y: pageY, width, height });
+    });
+  };
+
+  return (
+    <Pressable onPress={openModal} onLayout={measureTrigger}>
+      {children}
+    </Pressable>
+  );
 };
 
-/**
- * Component to render content only when collapsed
- */
-const ExpandableTrigger = ({ children }: { children: ReactNode }) => {
-  const { toggleExpand, isExpanded } = useExpandable();
-  if (isExpanded) return null;
-  return children;
+export const ModalContent = ({ children }: { children: ReactNode }) => {
+  const { isOpen, scrollOffset, closeModal } = useExpandableModal();
+
+  const handleScroll = (event: any) => {
+    scrollOffset.value = event.nativeEvent.contentOffset.y;
+  };
+
+  const handleScrollBeginDrag = (event: any) => {
+    // If we're at the top and trying to scroll up further, close the modal
+    if (scrollOffset.value <= 0 && event.nativeEvent.velocity.y > 0) {
+      closeModal();
+    }
+  };
+
+  if (!isOpen) return null;
+  return (
+    <View style={styles.content}>
+      {React.Children.map(children, (child) => {
+        if (React.isValidElement(child) && child.type === ScrollView) {
+          return React.cloneElement(child, {
+            onScroll: handleScroll,
+            onScrollBeginDrag: handleScrollBeginDrag,
+            scrollEventThrottle: 16,
+            bounces: false, // Prevents iOS bounce effect
+            overScrollMode: 'never', // Prevents Android over-scroll effect
+            ...child.props,
+          });
+        }
+        return child;
+      })}
+    </View>
+  );
 };
 
-// Styles for the components
 const styles = StyleSheet.create({
   content: {
     flex: 1,
@@ -200,11 +260,10 @@ const styles = StyleSheet.create({
   dragIndicator: {
     width: 50,
     height: 4,
-    backgroundColor: 'black',
+    backgroundColor: 'rgba(0,0,0,0.2)',
     borderRadius: 2,
     alignSelf: 'center',
     marginTop: 10,
+    marginBottom: 10,
   },
 });
-
-export { Expandable, ExpandableContent, ExpandableTrigger, useExpandable };

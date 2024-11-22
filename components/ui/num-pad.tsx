@@ -5,11 +5,12 @@ import { Text } from '~/components/ui/text';
 
 interface NumPadProps {
   handleNumberPress: (value: string) => void;
+  className?: string;
 }
 
-const NumPad = ({ handleNumberPress }: NumPadProps) => {
+const NumPad = ({ handleNumberPress, className }: NumPadProps) => {
   return (
-    <View className="flex w-full flex-col gap-2">
+    <View className={`flex w-full flex-col gap-2 ${className}`}>
       {/* Row 1: 1-2-3 */}
       <View className="flex flex-row gap-2">
         {[1, 2, 3].map((num) => (

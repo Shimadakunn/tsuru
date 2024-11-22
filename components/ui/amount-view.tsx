@@ -9,7 +9,7 @@ export interface AmountViewProps {
 
 const AmountView = React.forwardRef<View, AmountViewProps>(({ value, onChangeText }, ref) => {
   return (
-    <View ref={ref} className="w-full flex-1 items-start justify-between rounded-lg">
+    <View ref={ref} className="flex w-full items-start justify-between rounded-lg">
       <View className="w-full flex-row items-start justify-between px-1">
         {value ? (
           <View className="mt-2 flex-col items-start justify-between">
@@ -46,70 +46,39 @@ const AmountView = React.forwardRef<View, AmountViewProps>(({ value, onChangeTex
         </View>
       </View>
 
-      {/* Transaction Receipt */}
-      <View className="flex w-full rounded-lg border-2 border-dashed p-2">
-        {/* Swapping */}
-        <View className="flex flex-row items-center justify-between">
-          <Text className="text-lg" style={{ fontFamily: '' }}>
-            Spending
-          </Text>
-          <Text className="text-lg" style={{ fontFamily: 'GaeilgeKids' }}>
-            500 USDC
-          </Text>
-        </View>
-        {/* Receiving */}
-        <View className="flex flex-row items-center justify-between">
-          <Text className="text-lg" style={{ fontFamily: '' }}>
-            Receiving
-          </Text>
-          <Text className="text-lg" style={{ fontFamily: 'GaeilgeKids' }}>
-            0.01 ETH
-          </Text>
-        </View>
-        {/* Dotted separator */}
-        <View className="my-2 w-full border border-dashed " />
-        {/* Gas Fee */}
-        <View className="flex flex-row items-center justify-between">
-          <Text className="text-lg" style={{ fontFamily: '' }}>
-            Gas Fee
-          </Text>
-          <Text>~1 %</Text>
-        </View>
-      </View>
-
-      <View className="mt-2 w-full flex-row items-center justify-between">
+      <View className="mt-2 w-full flex-row items-center justify-center gap-4 px-1">
         <TouchableOpacity
-          className="flex h-12 w-20 items-center justify-center rounded-xl bg-background/90"
+          className="flex h-10 w-16 items-center justify-center rounded-xl bg-gray-400"
           onPress={() => onChangeText('20')}>
           <Text
-            className="ml-1 text-2xl font-black text-white"
+            className="ml-1 text-xl font-black text-white"
             style={{ fontFamily: 'GaeilgeKids' }}>
             10%
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          className="flex h-12 w-20 items-center justify-center rounded-xl bg-background/90"
+          className="flex h-10 w-16 items-center justify-center rounded-xl bg-gray-400"
           onPress={() => onChangeText('50')}>
           <Text
-            className="ml-1 text-2xl font-black text-white"
+            className="ml-1 text-xl font-black text-white"
             style={{ fontFamily: 'GaeilgeKids' }}>
             25%
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          className="flex h-12 w-20 items-center justify-center rounded-xl bg-background/90"
+          className="flex h-10 w-16 items-center justify-center rounded-xl bg-gray-400"
           onPress={() => onChangeText('100')}>
           <Text
-            className="ml-1 text-2xl font-black text-white"
+            className="ml-1 text-xl font-black text-white"
             style={{ fontFamily: 'GaeilgeKids' }}>
             50%
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          className="flex h-12 w-20 items-center justify-center rounded-xl bg-background/90"
+          className="flex h-10 w-16 items-center justify-center rounded-xl bg-gray-400"
           onPress={() => onChangeText('500')}>
           <Text
-            className="ml-1 text-2xl font-black text-white"
+            className="ml-1 text-xl font-black text-white"
             style={{ fontFamily: 'GaeilgeKids' }}>
             100%
           </Text>

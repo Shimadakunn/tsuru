@@ -1,9 +1,13 @@
+export * from './address-input';
 export * from './amount-view';
 export * from './button';
+export { default as FullModal } from './full-modal';
 export * from './input';
 export * from './input-buy';
 export * from './input-complexe';
 export { default as Modal } from './modal';
 export * from './num-pad';
 export * from './rectangle';
+export * from './separator';
+export * from './slider';
 export * from './text';
